@@ -1,18 +1,4 @@
-#include <errno.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
-void endless(void) {
-    while (true) {
-        // run forever
-    }
-}
-
-void print_process_information(char *name) {
-    printf("%s: PID = %d, PPID = %d\n", name, getpid(), getppid());
-}
+#include "../../common/common.h"
 
 int main(void) {
     printf("+----------------------------------------------------+\n");
@@ -20,18 +6,12 @@ int main(void) {
     printf("| Diese Lösung wurde erstellt von Simon Steinkellner |\n");
     printf("+----------------------------------------------------+\n\n");
 
-    pid_t pid = fork();
-
-    if (pid == -1) {
-        printf("Fehler beim erzeugen eines neuen Prozesses!\n");
-        printf("[%d]: %s\n", errno, strerror(errno));
-        return errno;
-    }
+    pid_t pid = new_process_or_error();
 
     if (pid == 0) {
-        print_process_information("Kind");
+        print_process_info("Kind");
     } else {
-        print_process_information("Vater");
+        print_process_info("Vater");
     }
 
     endless();
