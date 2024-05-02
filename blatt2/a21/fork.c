@@ -25,7 +25,7 @@ int main(void) {
     if (pid == -1) {
         printf("Fehler beim erzeugen eines neuen Prozesses!\n");
         printf("[%d]: %s\n", errno, strerror(errno));
-        return 1;
+        return errno;
     }
 
     if (pid == 0) {
