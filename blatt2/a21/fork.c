@@ -1,5 +1,7 @@
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 void endless(void) {
@@ -22,6 +24,7 @@ int main(void) {
 
     if (pid == -1) {
         printf("Fehler beim erzeugen eines neuen Prozesses!\n");
+        printf("[%d]: %s\n", errno, strerror(errno));
         return 1;
     }
 
