@@ -20,4 +20,4 @@ Metadaten zu diesem Projekt.
 |-------------|-------------------------------------------------------------------------------------------|
 | hello/      | Hier liegt ein kleines Programm welches zum Testen dient und lediglich eine Ausgabe macht | 
 | blatt2/     | Alle Aufgaben welche im Blatt 2 *Prozesse unter Linux* behandelt werden                   |
-| blatt2/a21/ | Aufgabe A21 *Abspaltung von Prozessen*                                                    |
+| common/     | Header mit Funktionen die von mehreren Aufgaben benutzt werden                            |

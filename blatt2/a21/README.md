@@ -16,7 +16,7 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc fork.c -o fork.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c fork.c -o fork.out` gebaut werden.
 
 ## Ausführen
 

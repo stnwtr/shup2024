@@ -53,3 +53,14 @@ pid_t wait_or_error(int *status) {
 
     return child;
 }
+
+void handle_signal_or_error(int signal, void (*handler)(int)) {
+    struct sigaction action;
+    action.sa_handler = handler;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    if (sigaction(signal, &action, NULL) == -1) {
+        printf("Fehler beim Registrieren eines Signal-Handlers!\n");
+        error_and_exit();
+    }
+}

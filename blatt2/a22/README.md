@@ -16,7 +16,7 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc wait.c -o wait.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c wait.c -o wait.out` gebaut werden.
 
 ## Ausführen
 

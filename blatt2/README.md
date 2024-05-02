@@ -13,3 +13,11 @@ Metadaten zu diesem Verzeichnis.
 | Semester | Sommersemester 2024 |
 | Blatt    | Blatt 02            |
 | Aufgabe  | /                   |
+
+## Aufbau
+
+| Verzeichnis | Bedeutung                                          |
+|-------------|----------------------------------------------------|
+| a21/        | Aufgabe A21 *Abspaltung von Prozessen*             |
+| a22/        | Aufgabe A22 *Warten und beenden von Kindprozessen* |
+| a23/        | Aufgabe A23 *Im Programm auf Signale reagieren*    |

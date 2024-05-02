@@ -30,4 +30,6 @@ void kill_or_error(pid_t, int);
 
 pid_t wait_or_error(int *);
 
+void handle_signal_or_error(int signal, void (*)(int));
+
 #endif // COMMON_H
