@@ -2,7 +2,22 @@
 #include <stdio.h>
 #include <unistd.h>
 
+void endless(void) {
+    while (true) {
+        // run forever
+    }
+}
+
+void print_process_information(char *name) {
+    printf("%s: PID = %d, PPID = %d\n", name, getpid(), getppid());
+}
+
 int main(void) {
+    printf("+----------------------------------------------------+\n");
+    printf("| A21: Abspaltung von Prozessen                      |\n");
+    printf("| Diese Lösung wurde erstellt von Simon Steinkellner |\n");
+    printf("+----------------------------------------------------+\n\n");
+
     pid_t pid = fork();
 
     if (pid == -1) {
@@ -11,10 +26,10 @@ int main(void) {
     }
 
     if (pid == 0) {
-        printf("Kind! pid = %d, ppid = %d\n", getpid(), getppid());
+        print_process_information("Kind");
     } else {
-        printf("Vater! pid = %d, ppid = %d\n", getpid(), getppid());
+        print_process_information("Vater");
     }
 
-    while (true);
+    endless();
 }
