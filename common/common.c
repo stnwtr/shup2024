@@ -1,7 +1,7 @@
 #include "common.h"
 
 void error_and_exit(void) {
-    printf("[%d]: %s\n", errno, strerror(errno));
+    printf("Fehler %d: %s\n", errno, strerror(errno));
     exit(errno);
 }
 
@@ -16,7 +16,17 @@ pid_t new_process_or_error(void) {
     return pid;
 }
 
-void endless(void) {
+pid_t new_process_with_callback_or_error(void (*handler)(void)) {
+    pid_t pid = new_process_or_error();
+
+    if (pid == 0) {
+        handler();
+    }
+
+    return pid;
+}
+
+[[noreturn]] void endless(void) {
     while (true) {
         // run forever
     }

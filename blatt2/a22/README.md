@@ -20,4 +20,4 @@ Dieses Programm kann mit `gcc -Wall ../../common/common.c wait.c -o wait.out` ge
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./wait.out` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./wait.out <eins> <zwei> <drei> <vier>` ausgeführt werden.

@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
         } else if (WIFSIGNALED(status)) {
             printf("beendet durch Signal: %d\n", WTERMSIG(status));
         } else {
-            printf("ungültiger Status: %d\n", status);
+            printf("unerwarteter Status: %d\n", status);
         }
     }
 
