@@ -22,3 +22,4 @@ Metadaten zu diesem Verzeichnis.
 | a22/        | Aufgabe A22 *Warten und beenden von Kindprozessen* |
 | a23/        | Aufgabe A23 *Im Programm auf Signale reagieren*    |
 | a24/        | Aufgabe A24 *Anderes Programm starten*             |
+| a25/        | Aufgabe A25 *Midi-Shell*                           |

@@ -32,6 +32,22 @@ void kill_or_error(pid_t, int);
 
 pid_t wait_or_error(int *);
 
-void handle_signal_or_error(int signal, void (*)(int));
+void handle_signal_or_error(int, void (*)(int));
+
+void flush_stdout_or_error(void);
+
+void flush_stderr_or_error(void);
+
+void flush_stdin(void);
+
+void read_string_from_stdin_or_error(char *, int);
+
+bool char_is_whitespace(char);
+
+bool str_starts_with(char *, char *);
+
+bool str_is_blank(char *);
+
+bool str_split(char *, char **, char *, size_t);
 
 #endif // COMMON_H
