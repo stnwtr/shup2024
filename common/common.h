@@ -2,6 +2,7 @@
 #define COMMON_H
 
 #include <errno.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -11,6 +12,7 @@
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sysexits.h>
@@ -52,6 +54,8 @@ bool str_is_blank(char *);
 
 bool str_split(char *, char **, char *, size_t);
 
+int str_to_int(char *);
+
 // semaphores
 
 int new_sem(key_t, int, ...);
@@ -61,5 +65,15 @@ void sem_wait(int, int);
 void sem_signal(int, int);
 
 void del_sem(int);
+
+// shared memory
+
+int new_shm(key_t, size_t);
+
+void *shm_attach(int);
+
+void shm_detach(void *);
+
+void del_shm(int);
 
 #endif // COMMON_H

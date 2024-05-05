@@ -167,6 +167,34 @@ bool str_split(char *source, char **destination, char *delimiter, size_t max) {
     return true;
 }
 
+int str_to_int(char *input) {
+    errno = 0;
+
+    char *end;
+    long output = strtol(input, &end, 10);
+
+    if (errno != 0) {
+        printf("Fehler bei der Konvertierung von String zu Integer!\n");
+        error_and_exit();
+    }
+
+    if (end == input) {
+        printf("Fehler bei der Konvertierung von String zu Integer!\n");
+        errno = EINVAL;
+        error_and_exit();
+    }
+
+    if (output < INT_MIN) {
+        output = INT_MIN;
+    }
+
+    if (output > INT_MAX) {
+        output = INT_MAX;
+    }
+
+    return (int) output;
+}
+
 int new_sem(key_t key, int count, ...) {
     int sem = semget(key, count, 0666 | IPC_CREAT);
 
@@ -225,6 +253,46 @@ void del_sem(int sem) {
 
     if (result == -1) {
         printf("Fehler beim Löschen einer Semaphore!\n");
+        error_and_exit();
+    }
+}
+
+int new_shm(key_t key, size_t size) {
+    int shm = shmget(key, size, 0666 | IPC_CREAT);
+
+    if (shm == -1) {
+        printf("Fehler beim Erzeugen eines Shared Memory Blocks!\n");
+        error_and_exit();
+    }
+
+    return shm;
+}
+
+void *shm_attach(int shm) {
+    void *block = shmat(shm, NULL, 0);
+
+    if (block == (void *) -1) {
+        printf("Fehler beim Laden eines Shared Memory Blocks!\n");
+        error_and_exit();
+    }
+
+    return block;
+}
+
+void shm_detach(void *block) {
+    int result = shmdt(block);
+
+    if (result == -1) {
+        printf("Fehler beim Zurückgeben eines Shared Memory Blocks!\n");
+        error_and_exit();
+    }
+}
+
+void del_shm(int shm) {
+    int result = shmctl(shm, IPC_RMID, NULL);
+
+    if (result == -1) {
+        printf("Fehler beim Löschen eines Shared Memory Blocks!\n");
         error_and_exit();
     }
 }
