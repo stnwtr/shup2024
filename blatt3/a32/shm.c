@@ -5,6 +5,8 @@ void child(int shm, int count, int *block) {
         printf("Kind liest:     %d\n", *block);
         sleep(1);
     }
+
+    shm_detach(block);
 }
 
 void parent(int shm, int count, int *block) {
@@ -17,6 +19,7 @@ void parent(int shm, int count, int *block) {
 
     sleep(5);
 
+    shm_detach(block);
     del_shm(shm);
 }
 
