@@ -26,7 +26,9 @@ pid_t new_process_with_callback_or_error(void (*handler)(void)) {
     return pid;
 }
 
-[[noreturn]] void endless(void) {
+[[noreturn]]
+
+void endless(void) {
     while (true) {
         // run forever
     }
@@ -163,4 +165,66 @@ bool str_split(char *source, char **destination, char *delimiter, size_t max) {
     destination[count] = NULL;
 
     return true;
+}
+
+int new_sem(key_t key, int count, ...) {
+    int sem = semget(key, count, 0666 | IPC_CREAT);
+
+    if (sem == -1) {
+        printf("Fehler beim Erzeugen einer Semaphore!\n");
+        error_and_exit();
+    }
+
+    va_list args;
+    va_start(args, count);
+
+    for (int i = 0; i < count; ++i) {
+        int result = semctl(sem, i, SETVAL, va_arg(args, int));
+
+        if (result == -1) {
+            printf("Fehler beim Initialisieren einer Semaphore!\n");
+            error_and_exit();
+        }
+    }
+
+    va_end(args);
+
+    return sem;
+}
+
+void sem_wait(int sem, int index) {
+    struct sembuf op;
+    op.sem_num = index;
+    op.sem_op = -1;
+    op.sem_flg = 0;
+
+    int result = semop(sem, &op, 1);
+
+    if (result == -1) {
+        printf("Fehler beim Dekrementieren einer Semaphore!\n");
+        error_and_exit();
+    }
+}
+
+void sem_signal(int sem, int index) {
+    struct sembuf op;
+    op.sem_num = index;
+    op.sem_op = 1;
+    op.sem_flg = 0;
+
+    int result = semop(sem, &op, 1);
+
+    if (result == -1) {
+        printf("Fehler beim Inkrementieren einer Semaphore!\n");
+        error_and_exit();
+    }
+}
+
+void del_sem(int sem) {
+    int result = semctl(sem, 0, IPC_RMID);
+
+    if (result == -1) {
+        printf("Fehler beim Löschen einer Semaphore!\n");
+        error_and_exit();
+    }
 }

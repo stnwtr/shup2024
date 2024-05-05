@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sysexits.h>
@@ -49,5 +51,15 @@ bool str_starts_with(char *, char *);
 bool str_is_blank(char *);
 
 bool str_split(char *, char **, char *, size_t);
+
+// semaphores
+
+int new_sem(key_t, int, ...);
+
+void sem_wait(int, int);
+
+void sem_signal(int, int);
+
+void del_sem(int);
 
 #endif // COMMON_H
