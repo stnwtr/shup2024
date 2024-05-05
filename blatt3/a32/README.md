@@ -20,4 +20,4 @@ Dieses Programm kann mit `gcc -Wall ../../common/common.c shm.c -o shm.out` geba
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./shm.out` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./shm.out <anzahl> <seed>` ausgeführt werden.

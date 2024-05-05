@@ -20,3 +20,4 @@ Metadaten zu diesem Verzeichnis.
 |-------------|----------------------------------------|
 | a31/        | Aufgabe A31 *Semaphore - Einstieg*     |
 | a32/        | Aufgabe A32 *Shared Memory - Einstieg* |
+| a33/        | Aufgabe A33 *Telefon-Hotline*          |

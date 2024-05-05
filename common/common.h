@@ -24,7 +24,7 @@ pid_t new_process_or_error(void);
 
 pid_t new_process_with_callback_or_error(void (*)(void));
 
-[[noreturn]] void endless(void);
+void endless(void);
 
 void print_process_info(char *);
 

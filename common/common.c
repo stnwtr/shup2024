@@ -26,8 +26,6 @@ pid_t new_process_with_callback_or_error(void (*handler)(void)) {
     return pid;
 }
 
-[[noreturn]]
-
 void endless(void) {
     while (true) {
         // run forever
