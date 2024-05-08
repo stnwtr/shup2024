@@ -232,6 +232,22 @@ void sem_wait(int sem, int index) {
     }
 }
 
+bool sem_wait_nowait(int sem, int index) {
+    struct sembuf op;
+    op.sem_num = index;
+    op.sem_op = -1;
+    op.sem_flg = IPC_NOWAIT;
+
+    int result = semop(sem, &op, 1);
+
+    if (result == -1 && errno != EAGAIN) {
+        printf("Fehler beim Dekrementieren einer Semaphore mit IPC_NOWAIT!\n");
+        error_and_exit();
+    }
+
+    return !(result == -1 && errno == EAGAIN);
+}
+
 void sem_signal(int sem, int index) {
     struct sembuf op;
     op.sem_num = index;

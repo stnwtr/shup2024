@@ -62,6 +62,8 @@ int new_sem(key_t, int, ...);
 
 void sem_wait(int, int);
 
+bool sem_wait_nowait(int, int);
+
 void sem_signal(int, int);
 
 void del_sem(int);

@@ -3,10 +3,9 @@
 #define BUFFER_SIZE 4
 int item_loc = BUFFER_SIZE, in_loc = BUFFER_SIZE + 1, out_loc = BUFFER_SIZE + 2;
 
-int mutex, full, empty;
+int sem, mutex, full, empty;
 
-int shm;
-int *buffer;
+int shm, *buffer;
 
 void producer(int n) {
     printf("Spawned Producer %d\n", n);
@@ -14,8 +13,8 @@ void producer(int n) {
     while (true) {
         safe_sleep(1);
 
-        sem_wait(empty, 0);
-        sem_wait(mutex, 0);
+        sem_wait(sem, empty);
+        sem_wait(sem, mutex);
 
         int in = buffer[in_loc];
         int item = ++buffer[item_loc];
@@ -24,8 +23,8 @@ void producer(int n) {
 
         printf("Producer %d produced %d\n", n, item);
 
-        sem_signal(mutex, 0);
-        sem_signal(full, 0);
+        sem_signal(sem, mutex);
+        sem_signal(sem, full);
     }
 }
 
@@ -35,25 +34,26 @@ void consumer(int n) {
     while (true) {
         safe_sleep(1);
 
-        sem_wait(full, 0);
-        sem_wait(mutex, 0);
+        if (sem_wait_nowait(sem, full)) {
+            sem_wait(sem, mutex);
 
-        int out = buffer[out_loc];
-        int item = buffer[out];
-        buffer[out_loc] = (out + 1) % BUFFER_SIZE;
-        printf("Consumer %d consumed %d\n", n, item);
+            int out = buffer[out_loc];
+            int item = buffer[out];
+            buffer[out_loc] = (out + 1) % BUFFER_SIZE;
+            printf("Consumer %d consumed %d\n", n, item);
 
-        sem_signal(mutex, 0);
-        sem_signal(empty, 0);
+            sem_signal(sem, mutex);
+            sem_signal(sem, empty);
+        } else {
+            printf("Consumer %d could not consume\n", n);
+        }
     }
 }
 
 void handler() {
     printf("SIGINT handler called\n");
 
-    del_sem(empty);
-    del_sem(full);
-    del_sem(mutex);
+    del_sem(sem);
     shm_detach(buffer);
     del_shm(shm);
 
@@ -76,9 +76,10 @@ int main(int argc, char *argv[]) {
 
     shm = new_shm(IPC_PRIVATE, BUFFER_SIZE * sizeof(int) + 3 * sizeof(int));
     buffer = shm_attach(shm);
-    mutex = new_sem(IPC_PRIVATE, 1, 1);
-    full = new_sem(IPC_PRIVATE, 1, 0);
-    empty = new_sem(IPC_PRIVATE, 1, BUFFER_SIZE);
+    sem = new_sem(IPC_PRIVATE, 3, 1, 0, BUFFER_SIZE);
+    mutex = 0;
+    full = 1;
+    empty = 2;
 
     for (int i = 0; i < producer_count; ++i) {
         if (new_process_or_error() == 0) {
