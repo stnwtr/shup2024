@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sysexits.h>
+#include <time.h>
 #include <unistd.h>
 
 void error_and_exit(void);
@@ -28,7 +29,7 @@ void endless(void);
 
 void print_process_info(char *);
 
-void print_process_info_with_arg(char * ,char *);
+void print_process_info_with_arg(char *, char *);
 
 void safe_sleep(unsigned int);
 
@@ -37,6 +38,8 @@ void kill_or_error(pid_t, int);
 pid_t wait_or_error(int *);
 
 void handle_signal_or_error(int, void (*)(int));
+
+void unregister_handler_or_error(int);
 
 void flush_stdout_or_error(void);
 
@@ -55,6 +58,8 @@ bool str_is_blank(char *);
 bool str_split(char *, char **, char *, size_t);
 
 int str_to_int(char *);
+
+int random_between(int, int);
 
 // semaphores
 

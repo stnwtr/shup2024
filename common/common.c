@@ -75,6 +75,10 @@ void handle_signal_or_error(int signal, void (*handler)(int)) {
     }
 }
 
+void unregister_handler_or_error(int signal) {
+    handle_signal_or_error(signal, SIG_DFL);
+}
+
 void flush_stdout_or_error(void) {
     if (fflush(stdout) == EOF) {
         printf("Fehler beim Beschreiben von STDOUT!\n");
@@ -191,6 +195,14 @@ int str_to_int(char *input) {
     }
 
     return (int) output;
+}
+
+int random_between(int from, int to) {
+    if (from >= to) {
+        return 0;
+    }
+
+    return (rand() % (to - from)) + from;
 }
 
 int new_sem(key_t key, int count, ...) {
