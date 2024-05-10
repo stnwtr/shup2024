@@ -61,6 +61,8 @@ int str_to_int(char *);
 
 int random_between(int, int);
 
+time_t now(void);
+
 // semaphores
 
 int new_sem(key_t, int, ...);

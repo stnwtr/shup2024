@@ -205,6 +205,10 @@ int random_between(int from, int to) {
     return (rand() % (to - from)) + from;
 }
 
+time_t now(void) {
+    return time(NULL);
+}
+
 int new_sem(key_t key, int count, ...) {
     int sem = semget(key, count, 0666 | IPC_CREAT);
 
