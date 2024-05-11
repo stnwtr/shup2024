@@ -1,162 +1,217 @@
 #include "../../common/common.h"
 
-#define ADVISOR_COUNT 3
 #define QUEUE_SIZE 4
-
-int sem, mutex = 0, full = 1, empty = 2;
-int sem2, mutex2 = 0, full2 = 1, empty2 = 2;
-int shm;
-void *memory;
-int shm2;
-void *memory2;
+#define MUTEX 0
+#define FULL 1
+#define EMPTY 2
 
 typedef struct {
+    int id;
     pid_t pid;
     time_t time;
-    time_t accessed;
 } Item;
 
 typedef struct {
-    Item queue[QUEUE_SIZE];
+    Item inner[QUEUE_SIZE];
     int in;
     int out;
 } Queue;
 
-void advisor(int n) {
+int accept_sem;
+int hang_up_sem;
+
+int accept_shm;
+Queue *accept_queue;
+
+int hang_up_shm;
+Item *hang_up_item;
+
+Item pop_item(Queue *queue) {
+    int out = queue->out;
+    Item item = queue->inner[out];
+
+    queue->inner[out].id = 0;
+    queue->inner[out].pid = 0;
+    queue->inner[out].time = 0;
+
+    queue->out = (out + 1) % QUEUE_SIZE;
+
+    return item;
+}
+
+void push_item(Queue *queue, Item item) {
+    int in = queue->in;
+
+    queue->inner[in].id = item.id;
+    queue->inner[in].pid = item.pid;
+    queue->inner[in].time = item.time;
+
+    queue->in = (in + 1) % QUEUE_SIZE;
+}
+
+void hang_up(Item item) {
+    hang_up_item->id = item.id;
+    hang_up_item->pid = item.pid;
+    hang_up_item->time = item.time;
+}
+
+void remove_hang_up(void) {
+    hang_up_item->id = 0;
+    hang_up_item->pid = 0;
+    hang_up_item->time = 0;
+}
+
+void debug_print_queues() {
+    printf("%lu - ACCEPT [ %d %d %d %d ] - HANG UP [ %d ] - ",
+           now(),
+           accept_queue->inner[0].id, accept_queue->inner[1].id,
+           accept_queue->inner[2].id, accept_queue->inner[3].id,
+           hang_up_item->id);
+}
+
+void advisor(int id) {
     while (true) {
-        sem_wait(sem, full);
-        sem_wait(sem, mutex);
+        debug_print_queues();
+        printf("Berater %d: Warte auf anruf\n", id);
 
-        Queue *queue = memory;
-        int out = queue->out;
-        Item item = queue->queue[out];
-        queue->queue[out].time = 0;
-        queue->queue[out].pid = 0;
-        queue->queue[out].accessed = 0;
-        queue->out = (out + 1) % QUEUE_SIZE;
-        printf("Berater %d: Anrufer mit id %d angenommen\n", n, item.pid);
+        sem_wait(accept_sem, FULL);
+        sem_wait(accept_sem, MUTEX);
 
-        sem_signal(sem, mutex);
-        sem_signal(sem, empty);
+        Item item = pop_item(accept_queue);
+        debug_print_queues();
+        printf("Berater %d: Nehme Anruf %d entgegen\n", id, item.id);
 
-        sem_wait(sem2, empty2);
-        sem_wait(sem2, mutex2);
+        sem_signal(accept_sem, MUTEX);
+        sem_signal(accept_sem, EMPTY);
 
-        Queue *queue2 = memory2;
-        int in = queue2->in;
-        queue2->queue[in].pid = item.pid;
-        queue2->queue[in].time = now();
-        queue2->queue[in].accessed = queue2->queue[in].time;
-        queue2->in = (in + 1) % QUEUE_SIZE;
+        int time = random_between(0, 60*5);
+        debug_print_queues();
+        printf("Berater %d: Gespräch dauert %d Sekunden\n", id, time);
+        safe_sleep(time);
 
-        sem_signal(sem2, mutex2);
-        safe_sleep(random_between(0, 6));
-        printf("Sending kill to id = %d\n", item.pid);
-        sem_signal(sem2, full2);
+        sem_wait(hang_up_sem, EMPTY);
+        sem_wait(hang_up_sem, MUTEX);
+
+        debug_print_queues();
+        printf("Berater %d: Anruf mit %d beendet, lege auf\n", id, item.id);
+        hang_up(item);
+
+        sem_signal(hang_up_sem, MUTEX);
+        sem_signal(hang_up_sem, FULL);
     }
 }
 
-void call_finish_handler(int n){
-    printf("Got killed with id = %d\n", n);
+void caller(int id) {
+    if (!sem_wait_nowait(accept_sem, EMPTY)) {
+        debug_print_queues();
+        printf("Anrufer %d: Warteschlange voll, beenden\n", id);
+        exit(EAGAIN);
+    }
+
+    sem_wait(accept_sem, MUTEX);
+
+    Item item = {id, getpid(), now()};
+    push_item(accept_queue, item);
+    debug_print_queues();
+    printf("Anrufer %d: In Warteschlange\n", id);
+
+    sem_signal(accept_sem, MUTEX);
+    sem_signal(accept_sem, FULL);
+
+    bool found = false;
+    while (true) {
+        sem_wait(hang_up_sem, FULL);
+        sem_wait(hang_up_sem, MUTEX);
+
+        for (int i = 0; i < QUEUE_SIZE; ++i) {
+            if (hang_up_item->id == id) {
+                debug_print_queues();
+                printf("Anrufer %d: Es wurde aufgelegt, beenden\n", id);
+                remove_hang_up();
+                debug_print_queues();
+                printf("Anrufer %d: Nach auflegen\n", id);
+                found = true;
+                break;
+            }
+        }
+
+        sem_signal(hang_up_sem, MUTEX);
+
+        if (found) {
+            sem_signal(hang_up_sem, EMPTY);
+            break;
+        } else {
+            sem_signal(hang_up_sem, FULL);
+        }
+    }
+
     exit(EX_OK);
 }
 
-void caller(int n) {
-    if (sem_wait_nowait(sem, empty)) {
-        sem_wait(sem, mutex);
-
-        Queue *queue = memory;
-        int in = queue->in;
-        queue->queue[in].pid = n; // getpid();
-        queue->queue[in].time = now();
-        queue->queue[in].accessed = queue->queue[in].time;
-        queue->in = (in + 1) % QUEUE_SIZE;
-        printf("Anrufer %d: In Warteschlange eingereiht!\n", n);
-
-        sem_signal(sem, mutex);
-        sem_signal(sem, full);
-
-        while (true) {
-            printf("Wait for death check %d\n", n);
-            sem_wait(sem2, full2);
-            sem_wait(sem2, mutex2);
-            Queue *queue2 = memory2;
-            bool found = false;
-            for (int i = 0; i < QUEUE_SIZE; ++i) {
-                if (queue2->queue[i].pid == n) {
-                    printf("found! %d\n", n);
-                    found = true;
-                    break;
-                }
-            }
-            sem_signal(sem2, mutex2);
-            sem_signal(sem2, empty2);
-
-            if (found) {
-                call_finish_handler(n);
-            }
-        }
-    } else {
-        printf("Anrufer %d: Warteschlange voll, beenden!\n", n);
-        exit(EAGAIN);
-    }
-}
-
-void broadcaster() {
+void notificator() {
     while (true) {
-        sem_wait(sem, mutex);
+        sem_wait(accept_sem, MUTEX);
 
-        Queue *queue = memory;
         for (int i = 0; i < QUEUE_SIZE; ++i) {
-            if (queue->queue[i].pid != 0 && (now() - queue->queue[i].accessed) >= 1) {
-                printf("Anrufer mit ID %d wartet seit %lu (%lu Sekunden)!\n",
-                       queue->queue[i].pid, queue->queue[i].time, now() - queue->queue[i].time);
-                queue->queue[i].accessed = now();
+            if (accept_queue->inner[i].id != 0 && (now() - accept_queue->inner[i].time) >= 1 * 60) {
+                debug_print_queues();
+                printf("NOTIFICATION: Anrufer %d wartet schon seit %lu\n", accept_queue->inner[i].id,
+                       (now() - accept_queue->inner[i].time));
+                accept_queue->inner[i].time = now();
             }
         }
 
-        sem_signal(sem, mutex);
+        sem_signal(accept_sem, MUTEX);
 
         safe_sleep(1);
     }
 }
 
-void shutdown_handler() {
-    del_sem(sem);
-    del_sem(sem2);
-    shm_detach(memory);
-    del_shm(shm);
-    shm_detach(memory2);
-    del_shm(shm2);
+int p;
 
-    exit(0);
+void shutdown_handler() {
+    if (p != getpid()) {
+        return;
+    }
+
+    debug_print_queues();
+    printf("Beenden.\n");
+
+    shm_detach(hang_up_item);
+    del_shm(hang_up_shm);
+
+    shm_detach(accept_queue);
+    del_shm(accept_shm);
+
+    del_sem(hang_up_sem);
+    del_sem(accept_sem);
+
+    exit(EX_OK);
 }
 
 int main(int argc, char *argv[]) {
+    p=getpid();
     printf("+----------------------------------------------------+\n");
     printf("| A33: Telefon-Hotline                               |\n");
     printf("| Diese Lösung wurde erstellt von Simon Steinkellner |\n");
     printf("+----------------------------------------------------+\n\n");
 
-    srand(now());
-
     handle_signal_or_error(SIGINT, shutdown_handler);
 
-    shm = new_shm(IPC_PRIVATE, sizeof(Queue));
-    memory = shm_attach(shm);
-    shm2 = new_shm(IPC_PRIVATE, sizeof(Queue));
-    memory2 = shm_attach(shm2);
-    sem = new_sem(IPC_PRIVATE, 3, 1, 0, QUEUE_SIZE);
-    sem2 = new_sem(IPC_PRIVATE, 3, 1, 0, QUEUE_SIZE);
+    accept_sem = new_sem(IPC_PRIVATE, 3, 1, 0, QUEUE_SIZE);
+    hang_up_sem = new_sem(IPC_PRIVATE, 3, 1, 0, QUEUE_SIZE);
 
-    // init memory
-    Queue *queue = memory;
-    queue->in = 0;
-    queue->out = 0;
+    accept_shm = new_shm(IPC_PRIVATE, sizeof(Queue));
+    accept_queue = shm_attach(accept_shm);
+    accept_queue->in = 0;
+    accept_queue->out = 0;
 
-    printf("\n");
+//    srand(now());
 
-    for (int i = 0; i < ADVISOR_COUNT; ++i) {
+    hang_up_shm = new_shm(IPC_PRIVATE, sizeof(Item));
+    hang_up_item = shm_attach(hang_up_shm);
+
+    for (int i = 0; i < 3; ++i) {
         if (new_process_or_error() == 0) {
             unregister_handler_or_error(SIGINT);
             advisor(i + 1);
@@ -165,17 +220,17 @@ int main(int argc, char *argv[]) {
 
     if (new_process_or_error() == 0) {
         unregister_handler_or_error(SIGINT);
-        broadcaster();
+        notificator();
     }
 
-    int i = 0;
-    while (true) {
-        safe_sleep(random_between(0, 2));
-
-        i++;
+    for (int i = 0; true; ++i) {
+        int time = random_between(0, 30);
+        debug_print_queues();
+        printf("Anrufer %d kommt in %d Sekunden\n", i + 1, time);
+        safe_sleep(time);
         if (new_process_or_error() == 0) {
             unregister_handler_or_error(SIGINT);
-            caller(i);
+            caller(i + 1);
         }
     }
 }
