@@ -59,7 +59,7 @@ bool str_split(char *, char **, char *, size_t);
 
 int str_to_int(char *);
 
-int random_between(int, int);
+unsigned int random_between(unsigned int, unsigned int);
 
 time_t now(void);
 

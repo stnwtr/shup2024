@@ -1,6 +1,7 @@
 #include "../../common/common.h"
 
 #define QUEUE_SIZE 4
+
 #define MUTEX 0
 #define FULL 1
 #define EMPTY 2
@@ -26,27 +27,25 @@ Queue *accept_queue;
 int hang_up_shm;
 Item *hang_up_item;
 
-Item pop_item(Queue *queue) {
-    int out = queue->out;
-    Item item = queue->inner[out];
+Item pop_item(void) {
+    int out = accept_queue->out;
+    Item item = accept_queue->inner[out];
 
-    queue->inner[out].id = 0;
-    queue->inner[out].pid = 0;
-    queue->inner[out].time = 0;
-
-    queue->out = (out + 1) % QUEUE_SIZE;
+    accept_queue->inner[out].id = 0;
+    accept_queue->inner[out].pid = 0;
+    accept_queue->inner[out].time = 0;
+    accept_queue->out = (out + 1) % QUEUE_SIZE;
 
     return item;
 }
 
-void push_item(Queue *queue, Item item) {
-    int in = queue->in;
+void push_item(Item item) {
+    int in = accept_queue->in;
 
-    queue->inner[in].id = item.id;
-    queue->inner[in].pid = item.pid;
-    queue->inner[in].time = item.time;
-
-    queue->in = (in + 1) % QUEUE_SIZE;
+    accept_queue->inner[in].id = item.id;
+    accept_queue->inner[in].pid = item.pid;
+    accept_queue->inner[in].time = item.time;
+    accept_queue->in = (in + 1) % QUEUE_SIZE;
 }
 
 void hang_up(Item item) {
@@ -55,45 +54,45 @@ void hang_up(Item item) {
     hang_up_item->time = item.time;
 }
 
-void remove_hang_up(void) {
+void clear_hang_up(void) {
     hang_up_item->id = 0;
     hang_up_item->pid = 0;
     hang_up_item->time = 0;
 }
 
-void debug_print_queues() {
-    printf("%lu - ACCEPT [ %d %d %d %d ] - HANG UP [ %d ] - ",
-           now(),
-           accept_queue->inner[0].id, accept_queue->inner[1].id,
-           accept_queue->inner[2].id, accept_queue->inner[3].id,
-           hang_up_item->id);
+void print_log_prefix(void) {
+    time_t a = now();
+    struct tm *b = localtime(&a);
+    int size = 64;
+    char buffer[size];
+    strftime(buffer, size, "[%F %T] ", b);
+    printf("%s", buffer);
 }
 
 void advisor(int id) {
     while (true) {
-        debug_print_queues();
-        printf("Berater %d: Warte auf anruf\n", id);
-
+        print_log_prefix();
+        printf("Berater %d: Warten auf Anruf.\n", id);
         sem_wait(accept_sem, FULL);
         sem_wait(accept_sem, MUTEX);
 
-        Item item = pop_item(accept_queue);
-        debug_print_queues();
-        printf("Berater %d: Nehme Anruf %d entgegen\n", id, item.id);
+        Item item = pop_item();
+        print_log_prefix();
+        printf("Berater %d: Anruf mit %d angenommen.\n", id, item.id);
 
         sem_signal(accept_sem, MUTEX);
         sem_signal(accept_sem, EMPTY);
 
-        int time = random_between(0, 60*5);
-        debug_print_queues();
-        printf("Berater %d: Gespräch dauert %d Sekunden\n", id, time);
+        unsigned int time = random_between(0, 60 * 5);
+        print_log_prefix();
+        printf("Berater %d: Anruf wird %d Sekunden dauern.\n", id, time);
         safe_sleep(time);
 
         sem_wait(hang_up_sem, EMPTY);
         sem_wait(hang_up_sem, MUTEX);
 
-        debug_print_queues();
-        printf("Berater %d: Anruf mit %d beendet, lege auf\n", id, item.id);
+        print_log_prefix();
+        printf("Berater %d: Anruf mit %d vorbei, lege auf.\n", id, item.id);
         hang_up(item);
 
         sem_signal(hang_up_sem, MUTEX);
@@ -102,37 +101,35 @@ void advisor(int id) {
 }
 
 void caller(int id) {
+    print_log_prefix();
+    printf("Anrufer %d: Rufe an.\n", id);
     if (!sem_wait_nowait(accept_sem, EMPTY)) {
-        debug_print_queues();
-        printf("Anrufer %d: Warteschlange voll, beenden\n", id);
+        print_log_prefix();
+        printf("Anrufer %d: Die Hotline ist zur Zeit überlastet. Versuchen Sie es später noch einmal.\n", id);
         exit(EAGAIN);
     }
-
     sem_wait(accept_sem, MUTEX);
 
     Item item = {id, getpid(), now()};
-    push_item(accept_queue, item);
-    debug_print_queues();
-    printf("Anrufer %d: In Warteschlange\n", id);
+    push_item(item);
+    print_log_prefix();
+    printf("Anrufer %d: In Warteschlange.\n", id);
 
     sem_signal(accept_sem, MUTEX);
     sem_signal(accept_sem, FULL);
 
+    print_log_prefix();
+    printf("Anrufer %d: Warte bis Gesprächsende.\n", id);
     bool found = false;
     while (true) {
         sem_wait(hang_up_sem, FULL);
         sem_wait(hang_up_sem, MUTEX);
 
-        for (int i = 0; i < QUEUE_SIZE; ++i) {
-            if (hang_up_item->id == id) {
-                debug_print_queues();
-                printf("Anrufer %d: Es wurde aufgelegt, beenden\n", id);
-                remove_hang_up();
-                debug_print_queues();
-                printf("Anrufer %d: Nach auflegen\n", id);
-                found = true;
-                break;
-            }
+        if (hang_up_item->id == id) {
+            print_log_prefix();
+            printf("Anrufer %d: Es wurde aufgelegt, beenden.\n", id);
+            clear_hang_up();
+            found = true;
         }
 
         sem_signal(hang_up_sem, MUTEX);
@@ -154,9 +151,8 @@ void notificator() {
 
         for (int i = 0; i < QUEUE_SIZE; ++i) {
             if (accept_queue->inner[i].id != 0 && (now() - accept_queue->inner[i].time) >= 1 * 60) {
-                debug_print_queues();
-                printf("NOTIFICATION: Anrufer %d wartet schon seit %lu\n", accept_queue->inner[i].id,
-                       (now() - accept_queue->inner[i].time));
+                print_log_prefix();
+                printf("Anrufer %d: Bitte warten Sie, bis ein Beratungsplatz frei ist.\n", accept_queue->inner[i].id);
                 accept_queue->inner[i].time = now();
             }
         }
@@ -174,7 +170,7 @@ void shutdown_handler() {
         return;
     }
 
-    debug_print_queues();
+    print_log_prefix();
     printf("Beenden.\n");
 
     shm_detach(hang_up_item);
@@ -189,11 +185,15 @@ void shutdown_handler() {
     exit(EX_OK);
 }
 
-int main(int argc, char *argv[]) {
-    p=getpid();
+int main(void) {
+    p = getpid();
+    print_log_prefix();
     printf("+----------------------------------------------------+\n");
+    print_log_prefix();
     printf("| A33: Telefon-Hotline                               |\n");
+    print_log_prefix();
     printf("| Diese Lösung wurde erstellt von Simon Steinkellner |\n");
+    print_log_prefix();
     printf("+----------------------------------------------------+\n\n");
 
     handle_signal_or_error(SIGINT, shutdown_handler);
@@ -205,8 +205,6 @@ int main(int argc, char *argv[]) {
     accept_queue = shm_attach(accept_shm);
     accept_queue->in = 0;
     accept_queue->out = 0;
-
-//    srand(now());
 
     hang_up_shm = new_shm(IPC_PRIVATE, sizeof(Item));
     hang_up_item = shm_attach(hang_up_shm);
@@ -224,9 +222,9 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; true; ++i) {
-        int time = random_between(0, 30);
-        debug_print_queues();
-        printf("Anrufer %d kommt in %d Sekunden\n", i + 1, time);
+        unsigned int time = random_between(0, 2 * 60);
+        print_log_prefix();
+        printf("Anrufer %d: Kommt in %d Sekunden.\n", i + 1, time);
         safe_sleep(time);
         if (new_process_or_error() == 0) {
             unregister_handler_or_error(SIGINT);

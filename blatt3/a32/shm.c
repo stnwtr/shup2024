@@ -1,6 +1,6 @@
 #include "../../common/common.h"
 
-void child(int shm, int count, int *block) {
+void child(int count, int *block) {
     for (int i = 0; i < count; ++i) {
         printf("Kind liest:     %d\n", *block);
         sleep(1);
@@ -11,9 +11,9 @@ void child(int shm, int count, int *block) {
 
 void parent(int shm, int count, int *block) {
     for (int i = 0; i < count; ++i) {
-        int n = rand();
+        unsigned int n = random_between(0, 0);
         printf("Vater schreibt: %d\n", n);
-        *block = n;
+        *block = (int) n;
         sleep(1);
     }
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     pid_t pid = new_process_or_error();
 
     if (pid == 0) {
-        child(shm, count, block);
+        child(count, block);
     } else {
         parent(shm, count, block);
     }

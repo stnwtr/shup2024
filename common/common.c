@@ -197,12 +197,20 @@ int str_to_int(char *input) {
     return (int) output;
 }
 
-int random_between(int from, int to) {
-    if (from >= to) {
+unsigned int random_between(unsigned int from, unsigned int to) {
+    if (from == to) {
+        if (from == 0) {
+            return arc4random();
+        } else {
+            return from;
+        }
+    }
+
+    if (from > to) {
         return 0;
     }
 
-    return (rand() % (to - from)) + from;
+    return (arc4random() % (to - from)) + from;
 }
 
 time_t now(void) {
