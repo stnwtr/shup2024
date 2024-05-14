@@ -1,8 +1,8 @@
 #include "../../common/common.h"
 
-#define BUFFER_SIZE 1024 // + 1
-#define MAX_ARGS 32 // + 1
-#define MAX_PATH 64 // + 1
+#define BUFFER_SIZE 1024 // + \0
+#define MAX_ARGS 32 // + self + NULL
+#define MAX_PATH 64 // + NULL
 
 void get_cwd(char *buffer, size_t len) {
     if (getcwd(buffer, len) == NULL) {
@@ -20,30 +20,31 @@ void get_path(char *buffer, size_t len) {
     }
 }
 
-bool try_exec(char **args, char **path) {
+void try_exec(char **args, char **path) {
     char *name = args[0];
+    char executable[BUFFER_SIZE] = {0};
     bool can_exec = str_starts_with(args[0], "/") || str_starts_with(args[0], "./") || str_starts_with(args[0], "../");
 
     if (!can_exec) {
         int i = 0;
         char *part;
-        char file[BUFFER_SIZE];
 
         while ((part = path[i++])) {
-            printf("here with part = %s\n", part);
-            sprintf(file, "%s/%s", part, name);
+            sprintf(executable, "%s/%s", part, name);
 
-            if (access(file, F_OK | R_OK | X_OK) != -1) {
-                name = file;
+            if (access(executable, F_OK | R_OK | X_OK) != -1) {
+                can_exec = true;
+                name = executable;
                 break;
-            } else {
-                // error is set TODO
             }
         }
     }
 
-    execv(name, args);
-    return false;
+    if (can_exec) {
+        execv(name, args);
+    } else {
+        errno = ENOENT;
+    }
 }
 
 int main(void) {
@@ -71,17 +72,17 @@ int main(void) {
         }
 
         if (strcmp(buffer, "schluss") == 0) {
-            printf("Die Shell wird beendet!\n");
+            printf("\nDie Shell wird beendet!\n");
             break;
         }
 
         if (!str_split(buffer, args, "\t\r\n\f\v ", MAX_ARGS)) {
-            printf("Der Befehl konnte nicht ausgeführt werden: Zu viele Argumente!\n");
+            printf("\nDer Befehl konnte nicht ausgeführt werden: Zu viele Argumente!\n");
             continue;
         }
 
         if (!str_split(raw_path, path, ":", MAX_PATH)) {
-            printf("Der Befehl konnte nicht ausgeführt werden: PATH-Variable ist zu groß!\n");
+            printf("\nDer Befehl konnte nicht ausgeführt werden: PATH-Variable ist zu groß!\n");
             continue;
         }
 
@@ -95,7 +96,7 @@ int main(void) {
             wait_or_error(&status);
 
             if (WIFEXITED(status)) {
-                printf("Exit: %d: %s\n\n", WEXITSTATUS(status), strerror(WEXITSTATUS(status)));
+                printf("Exit: %d - %s\n\n", WEXITSTATUS(status), strerror(WEXITSTATUS(status)));
             } else if (WIFSIGNALED(status)) {
                 printf("Signal: %d\n\n", WTERMSIG(status));
             } else {

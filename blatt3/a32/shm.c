@@ -3,24 +3,15 @@
 void child(int count, int *block) {
     for (int i = 0; i < count; ++i) {
         printf("Kind liest:     %d\n", *block);
-        sleep(1);
     }
-
-    shm_detach(block);
 }
 
-void parent(int shm, int count, int *block) {
+void parent(int count, int *block) {
     for (int i = 0; i < count; ++i) {
         unsigned int n = random_between(0, 0);
         printf("Vater schreibt: %d\n", n);
         *block = (int) n;
-        sleep(1);
     }
-
-    sleep(5);
-
-    shm_detach(block);
-    del_shm(shm);
 }
 
 int main(int argc, char *argv[]) {
@@ -42,12 +33,15 @@ int main(int argc, char *argv[]) {
     int *block = shm_attach(shm);
     srand(seed);
 
-    pid_t pid = new_process_or_error();
-
-    if (pid == 0) {
+    if (new_process_or_error() == 0) {
         child(count, block);
     } else {
-        parent(shm, count, block);
+        parent(count, block);
+
+        wait_or_error(NULL);
+
+        shm_detach(block);
+        del_shm(shm);
     }
 
     return EX_OK;

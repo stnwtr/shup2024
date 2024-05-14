@@ -16,6 +16,8 @@ Metadaten zu diesem Verzeichnis.
 
 ## Aufbau
 
+Aufbau dieses Verzeichnisses.
+
 | Verzeichnis | Bedeutung                              |
 |-------------|----------------------------------------|
 | a31/        | Aufgabe A31 *Semaphore - Einstieg*     |

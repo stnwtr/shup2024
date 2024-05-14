@@ -16,6 +16,8 @@ Metadaten zu diesem Verzeichnis.
 
 ## Aufbau
 
+Aufbau dieses Verzeichnisses.
+
 | Verzeichnis | Bedeutung                                          |
 |-------------|----------------------------------------------------|
 | a21/        | Aufgabe A21 *Abspaltung von Prozessen*             |

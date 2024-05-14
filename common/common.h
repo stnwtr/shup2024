@@ -37,6 +37,8 @@ void kill_or_error(pid_t, int);
 
 pid_t wait_or_error(int *);
 
+void await_all_children(void);
+
 void handle_signal_or_error(int, void (*)(int));
 
 void unregister_handler_or_error(int);

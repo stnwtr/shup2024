@@ -6,9 +6,7 @@ int main(void) {
     printf("| Diese Lösung wurde erstellt von Simon Steinkellner |\n");
     printf("+----------------------------------------------------+\n\n");
 
-    pid_t pid = new_process_or_error();
-
-    if (pid == 0) {
+    if (new_process_or_error() == 0) {
         print_process_info("Kind");
     } else {
         print_process_info("Vater");

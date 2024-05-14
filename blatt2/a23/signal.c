@@ -9,8 +9,6 @@ void handler(int signal) {
     } else if (signal == SIGINT) {
         ++count;
         printf("%d. Signal: SIGINT", count);
-    } else {
-        printf("Ungültiges Signal: %d", signal);
     }
 
     if (count == 3) {
@@ -26,6 +24,10 @@ int main(void) {
     printf("| A23: Im Programm auf Signale reagieren             |\n");
     printf("| Diese Lösung wurde erstellt von Simon Steinkellner |\n");
     printf("+----------------------------------------------------+\n\n");
+
+    printf("Programm wurde gestartet. Höre auf Signale:\n");
+    printf("- SIGINT (^C): Erhöhe Zähler um 1.\n");
+    printf("- SIGTERM: Erhöhe Zähler um 1.\n\n");
 
     print_process_info("Prozess");
 

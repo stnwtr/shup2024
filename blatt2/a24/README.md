@@ -16,7 +16,7 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc -Wall ../../common/common.c exec.c -o exec.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c exec.c -o exec.out <o|x|n> <parameter>` gebaut werden.
 
 ## Ausführen
 

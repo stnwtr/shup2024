@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
         int status;
         pid_t child = wait_or_error(&status);
 
-        char *name;
+        char *name = "_";
 
         if (child == a) {
             name = "Kind A";
@@ -51,9 +51,6 @@ int main(int argc, char **argv) {
             name = "Kind B";
         } else if (child == c) {
             name = "Kind C";
-        } else {
-            printf("Ungültige Kind-Prozess-ID von wait empfangen!\n");
-            exit(EX_SOFTWARE);
         }
 
         printf("%s mit PID = %d erwartet - ", name, child);
@@ -62,8 +59,6 @@ int main(int argc, char **argv) {
             printf("normal beendet mit Code: %d\n", WEXITSTATUS(status));
         } else if (WIFSIGNALED(status)) {
             printf("beendet durch Signal: %d\n", WTERMSIG(status));
-        } else {
-            printf("unerwarteter Status: %d\n", status);
         }
     }
 

@@ -1,0 +1,91 @@
+main {
+    register_signal_handler(SIGINT);
+
+    accept_semaphore = semaphore [1 0 3] (MUTEX FULL EMPTY)
+    hang_up_semaphore = semaphore [1 0 3] (MUTEX FULL EMPTY)
+
+    accept_shared_memory = accept_queue = queue = shared_memory(sizeof(Queue))
+    hang_up_shared_memory = hang_up_item = item = shared_memory(sizeof(QueueItem))
+
+    for i in 0..3 {
+        fork_new_advisor();
+    }
+
+    fork_new_notificator();
+
+    repeat {
+        sleep_minutes(0, 2);
+        fork_new_caller();
+    }
+}
+
+advisor {
+    { // consume
+        wait(accept, FULL)
+        wait(accept, MUTEX)
+
+        item = pop_accept_queue()
+
+        signal(accept, MUTEX)
+        signal(accept, EMPTY)
+    }
+
+    do_the_work() // aka sleep()
+
+    { // produce
+        wait(hang_up, EMPTY)
+        wait(hang_up, MUTEX)
+
+        push_hang_up_item()
+
+        signal(hang_up, MUTEX)
+        signal(hang_up, FULL)
+    }
+}
+
+caller {
+    if (queue_full) {
+        exit()
+    }
+    
+    { // produce
+        wait(accept, EMPTY)
+        wait(accept, MUTEX)
+        
+        push_accept_queue()
+        
+        signal(accept, MUTEX)
+        signal(accept, FULL)
+    }
+
+    repeat { // try consume
+        wait(hang_up, FULL)
+        wait(hang_up, MUTEX)
+
+        if (hang_up_item == self) {
+            signal(hang_up, MUTEX)
+            signal(hang_up, EMPTY)
+
+            exit()
+        } else {
+            signal(hang_up, MUTEX)
+            signal(hang_up, FULL)
+        }
+    }
+}
+
+notificator {
+    repeat {
+        wait(accept, MUTEX)
+
+        for item in queue {
+                    if (item.id != 0 AND (now() - item.time > 1 minute)) {
+                        notificate(item);
+                        item.time = now()
+                    }
+                }
+                sleep(1)
+
+        signal(accept, MUTEX)
+    }
+}

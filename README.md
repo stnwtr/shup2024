@@ -16,6 +16,8 @@ Metadaten zu diesem Projekt.
 
 ## Aufbau
 
+Aufbau dieses Verzeichnisses.
+
 | Verzeichnis | Bedeutung                                                                                 |
 |-------------|-------------------------------------------------------------------------------------------|
 | hello/      | Hier liegt ein kleines Programm welches zum Testen dient und lediglich eine Ausgabe macht | 

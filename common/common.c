@@ -64,6 +64,12 @@ pid_t wait_or_error(int *status) {
     return child;
 }
 
+void await_all_children(void) {
+    while (wait(NULL) != -1 || errno == EINTR) {
+        // run till all children are awaited
+    }
+}
+
 void handle_signal_or_error(int signal, void (*handler)(int)) {
     struct sigaction action;
     action.sa_handler = handler;
@@ -151,6 +157,16 @@ bool str_is_blank(char *buffer) {
     return true;
 }
 
+// +---+---+---+---+---+---+---+---+---+---+---+----+
+// | A | B | C | ; | D | E | F | ; | G | H | I | \0 |
+// +---+---+---+---+---+---+---+---+---+---+---+----+
+//   ^           x   ^           x   ^
+// Replace ; with \0
+// count(;) + 1 is arraysize
+// 0, ; - 1 are pointers char* values
+//
+// strtok doing this for me
+
 bool str_split(char *source, char **destination, char *delimiter, size_t max) {
     char *token = strtok(source, delimiter);
     int count = 0;
@@ -200,7 +216,7 @@ int str_to_int(char *input) {
 unsigned int random_between(unsigned int from, unsigned int to) {
     if (from == to) {
         if (from == 0) {
-            return arc4random();
+            return rand();
         } else {
             return from;
         }
@@ -210,7 +226,7 @@ unsigned int random_between(unsigned int from, unsigned int to) {
         return 0;
     }
 
-    return (arc4random() % (to - from)) + from;
+    return (rand() % (to - from)) + from;
 }
 
 time_t now(void) {

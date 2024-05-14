@@ -6,6 +6,10 @@
 #define FULL 1
 #define EMPTY 2
 
+#define CALLER_INTERVAL (2 * 60)
+#define ADVISOR_DURATION (5 * 60)
+#define ANNOUNCEMENT_INTERVAL (1 * 60)
+
 typedef struct {
     int id;
     pid_t pid;
@@ -26,6 +30,8 @@ Queue *accept_queue;
 
 int hang_up_shm;
 Item *hang_up_item;
+
+pid_t parent;
 
 Item pop_item(void) {
     int out = accept_queue->out;
@@ -83,7 +89,7 @@ void advisor(int id) {
         sem_signal(accept_sem, MUTEX);
         sem_signal(accept_sem, EMPTY);
 
-        unsigned int time = random_between(0, 60 * 5);
+        unsigned int time = random_between(0, ADVISOR_DURATION);
         print_log_prefix();
         printf("Berater %d: Anruf wird %d Sekunden dauern.\n", id, time);
         safe_sleep(time);
@@ -150,7 +156,7 @@ void notificator() {
         sem_wait(accept_sem, MUTEX);
 
         for (int i = 0; i < QUEUE_SIZE; ++i) {
-            if (accept_queue->inner[i].id != 0 && (now() - accept_queue->inner[i].time) >= 1 * 60) {
+            if (accept_queue->inner[i].id != 0 && (now() - accept_queue->inner[i].time) >= ANNOUNCEMENT_INTERVAL) {
                 print_log_prefix();
                 printf("Anrufer %d: Bitte warten Sie, bis ein Beratungsplatz frei ist.\n", accept_queue->inner[i].id);
                 accept_queue->inner[i].time = now();
@@ -163,12 +169,12 @@ void notificator() {
     }
 }
 
-int p;
-
 void shutdown_handler() {
-    if (p != getpid()) {
-        return;
+    if (getpid() != parent) {
+        exit(EX_OK);
     }
+
+    await_all_children();
 
     print_log_prefix();
     printf("Beenden.\n");
@@ -186,7 +192,6 @@ void shutdown_handler() {
 }
 
 int main(void) {
-    p = getpid();
     print_log_prefix();
     printf("+----------------------------------------------------+\n");
     print_log_prefix();
@@ -195,8 +200,6 @@ int main(void) {
     printf("| Diese Lösung wurde erstellt von Simon Steinkellner |\n");
     print_log_prefix();
     printf("+----------------------------------------------------+\n\n");
-
-    handle_signal_or_error(SIGINT, shutdown_handler);
 
     accept_sem = new_sem(IPC_PRIVATE, 3, 1, 0, QUEUE_SIZE);
     hang_up_sem = new_sem(IPC_PRIVATE, 3, 1, 0, QUEUE_SIZE);
@@ -209,25 +212,30 @@ int main(void) {
     hang_up_shm = new_shm(IPC_PRIVATE, sizeof(Item));
     hang_up_item = shm_attach(hang_up_shm);
 
+    parent = getpid();
+    srand(arc4random());
+
+    handle_signal_or_error(SIGINT, shutdown_handler);
+
     for (int i = 0; i < 3; ++i) {
         if (new_process_or_error() == 0) {
-            unregister_handler_or_error(SIGINT);
+            srand(arc4random());
             advisor(i + 1);
         }
     }
 
     if (new_process_or_error() == 0) {
-        unregister_handler_or_error(SIGINT);
+        srand(arc4random());
         notificator();
     }
 
     for (int i = 0; true; ++i) {
-        unsigned int time = random_between(0, 2 * 60);
+        unsigned int time = random_between(0, CALLER_INTERVAL);
         print_log_prefix();
         printf("Anrufer %d: Kommt in %d Sekunden.\n", i + 1, time);
         safe_sleep(time);
         if (new_process_or_error() == 0) {
-            unregister_handler_or_error(SIGINT);
+            srand(arc4random());
             caller(i + 1);
         }
     }
