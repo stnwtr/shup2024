@@ -16,8 +16,8 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc -Wall ../../common/common.c shell.c -o shell.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c shell.c -o shell.out` gebaut werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a25` befindet.
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./shell.out` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./shell.out` ausgeführt werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a25` befindet.

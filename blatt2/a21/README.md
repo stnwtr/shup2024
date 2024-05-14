@@ -16,8 +16,8 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc -Wall ../../common/common.c fork.c -o fork.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c fork.c -o fork.out` gebaut werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a21` befindet.
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./fork.out` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./fork.out` ausgeführt werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a21` befindet.

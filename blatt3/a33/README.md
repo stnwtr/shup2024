@@ -20,8 +20,8 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc -Wall ../../common/common.c tel.c -o tel.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c tel.c -o tel.out` gebaut werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a33` befindet.
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./tel.out` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./tel.out` ausgeführt werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a33` befindet.

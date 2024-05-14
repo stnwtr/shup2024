@@ -16,8 +16,8 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc -Wall ../../common/common.c shm.c -o shm.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c shm.c -o shm.out` gebaut werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a32` befindet.
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./shm.out <anzahl> <seed>` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./shm.out <anzahl> <seed>` ausgeführt werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a32` befindet.

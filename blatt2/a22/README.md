@@ -16,8 +16,8 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc -Wall ../../common/common.c wait.c -o wait.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c wait.c -o wait.out` gebaut werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a22` befindet.
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./wait.out <eins> <zwei> <drei> <vier>` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./wait.out <eins> <zwei> <drei> <vier>` ausgeführt werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a22` befindet.

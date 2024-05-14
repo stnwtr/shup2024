@@ -16,8 +16,8 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc -Wall ../../common/common.c sem.c -o sem.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c sem.c -o sem.out` gebaut werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a31` befindet.
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./sem.out` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./sem.out` ausgeführt werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a31` befindet.

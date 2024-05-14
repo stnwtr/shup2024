@@ -16,8 +16,8 @@ Metadaten zu diesem Programm.
 
 ## Bauen
 
-Dieses Programm kann mit `gcc -Wall ../../common/common.c signal.c -o signal.out` gebaut werden.
+Dieses Programm kann mit `gcc -Wall ../../common/common.c signal.c -o signal.out` gebaut werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a23` befindet.
 
 ## Ausführen
 
-Das Programm kann nach dem Bau mit `./signal.out` ausgeführt werden.
+Das Programm kann nach dem Bau mit `./signal.out` ausgeführt werden. Vorbedingung ist, dass man sich im Verzeichnis `blatt2/a23` befindet.
